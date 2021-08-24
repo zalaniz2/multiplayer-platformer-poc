@@ -1,9 +1,16 @@
 package com.multiplayer.platformer.server;
 
+import com.badlogic.gdx.backends.headless.HeadlessApplication;
+import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
+import com.badlogic.gdx.backends.headless.HeadlessNativesLoader;
+import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 import com.multiplayer.platformer.Network;
+import com.multiplayer.platformer.entitys.Player;
+import com.multiplayer.platformer.packets.MovePacket;
+import com.multiplayer.platformer.physics.PlatformerPhysics;
 
 import java.io.IOException;
 
@@ -12,14 +19,16 @@ public class WorldServer {
     private final float SPAWN_X = 3;
     private final float SPAWN_Y = 5;
 
-    private Server server;
+    public static Server server;
     private WorldManager worldManager;
     private Network network;
+    private PlatformerPhysics platformerPhysics;
+    private TiledMap map;
 
     public WorldServer(){
         server = new Server();
         network = new Network();
-        worldManager = new WorldManager(server);
+        worldManager = WorldManager.getGame();
     }
 
     public void startServer() throws IOException {
@@ -31,7 +40,7 @@ public class WorldServer {
                 //if player doesn't exist yet
                 if(worldManager.getPlayerList().get(connection.getID()) == null){
                     System.out.println("Got new connection, sending init packet");
-                    PlayerModel newPlayer = new PlayerModel();
+                    Player newPlayer = new Player();
                     newPlayer.id = connection.getID();
                     newPlayer.position.x = SPAWN_X;
                     newPlayer.position.y = SPAWN_Y;
@@ -41,6 +50,16 @@ public class WorldServer {
                 }
             }
             public void received (Connection connection, Object object) {
+                if(object instanceof MovePacket){
+                    MovePacket movePacket = (MovePacket) object;
+//                    System.out.println("Received data \n " +
+//                            "ID:" + movePacket.id +
+//                            " delta: " + movePacket.delta +
+//                            " UP:" + movePacket.up +
+//                            " LEFT: " + movePacket.left +
+//                            " RIGHT: " + movePacket.right);
+                    worldManager.applyInput(movePacket);
+                }
             }
             public void disconnected (Connection connection) {
                 worldManager.removePlayer(connection.getID());

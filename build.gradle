@@ -66,5 +66,6 @@ project(":server") {
         compile "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
         compile "com.esotericsoftware:kryonet:2.22.0-RC1"
+        compile "org.mockito:mockito-core:2.1.0"
     }
 }

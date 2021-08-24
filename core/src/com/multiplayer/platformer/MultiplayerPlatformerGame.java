@@ -8,9 +8,11 @@ import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.multiplayer.platformer.entitys.Player;
 
@@ -28,8 +30,11 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 	private OrthographicCamera camera;
 	private Vector3 cameraPosition;
 	private Texture texture;
-	private GameClient gameClient;
 	private GameManager gameManager;
+	private int widthInTiles;
+	private int heightInTiles;
+	private MapProperties mapProperties;
+	private float delta;
 	
 	@Override
 	public void create () {
@@ -48,12 +53,15 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 		map = assetManager.get("level.tmx");
 		texture = assetManager.get("player.png");
 
+		mapProperties = map.getProperties();
+		widthInTiles = mapProperties.get("width", Integer.class);
+		heightInTiles = mapProperties.get("height", Integer.class);
+
 		//create connected player
 		Player player = new Player(texture);
 
 		//Pass in player as main player to manager
 		gameManager = new GameManager(player);
-		gameClient = new GameClient(gameManager);
 
 		//set up rendering and camera
 		renderer = new OrthogonalTiledMapRenderer(map, UNIT_SCALE);
@@ -63,13 +71,20 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 		cameraPosition = new Vector3();
 
 		//Attempt to connect to server
-		gameClient.connect();
+		gameManager.connect();
 	}
 
 	@Override
 	public void render () {
 		if(!gameManager.isInitialized()) return; //only if player has init data
+		delta = Gdx.graphics.getDeltaTime();
+		gameManager.updatePlayer(delta);
 		Gdx.gl.glClear( GL20.GL_COLOR_BUFFER_BIT );
+		cameraPosition.set(gameManager.getMainPlayer().position.x, gameManager.getMainPlayer().position.y, 0f);
+		camera.position.lerp(cameraPosition, SMOOTHING);
+		camera.position.x = MathUtils.clamp(camera.position.x, camera.viewportWidth/2, widthInTiles - camera.viewportWidth/2);
+		camera.position.y = MathUtils.clamp(camera.position.y, camera.viewportHeight/2, heightInTiles - camera.viewportHeight/2);
+		camera.update();
 		renderer.setView(camera);
 		renderer.render();
 		batch.setProjectionMatrix(camera.combined);

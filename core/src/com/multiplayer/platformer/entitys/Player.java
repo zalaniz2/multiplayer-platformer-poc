@@ -8,8 +8,12 @@ public class Player {
     public final float HEIGHT = 1;
     public int id;
     public Vector2 position = new Vector2();
+    public Vector2 velocity = new Vector2();
     public Texture playerTexture;
+    public PlayerControls controls = new PlayerControls();
+    public boolean grounded = false;
 
+    public Player(){}//default for server
     public Player(Texture texture){
         playerTexture = texture;
     }

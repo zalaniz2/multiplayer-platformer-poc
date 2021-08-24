@@ -3,6 +3,11 @@ package com.multiplayer.platformer;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.EndPoint;
 import com.multiplayer.platformer.packets.InitPacket;
+import com.multiplayer.platformer.packets.MovePacket;
+import com.multiplayer.platformer.packets.PlayerSnapshot;
+import com.multiplayer.platformer.packets.WorldStatePacket;
+
+import java.util.ArrayList;
 
 public class Network {
 
@@ -13,6 +18,10 @@ public class Network {
     public void register(EndPoint endPoint){
         Kryo kryo = endPoint.getKryo();
         kryo.register(InitPacket.class);
+        kryo.register(MovePacket.class);
+        kryo.register(WorldStatePacket.class);
+        kryo.register(PlayerSnapshot.class);
+        kryo.register(ArrayList.class);
     }
 
     public int getTCP_PORT() {
