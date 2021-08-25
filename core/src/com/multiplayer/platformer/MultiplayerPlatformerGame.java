@@ -76,6 +76,7 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 		if(!gameManager.isInitialized()) return; //only if player has init data
 		delta = Gdx.graphics.getDeltaTime();
 		gameManager.updatePlayer(delta);
+		gameManager.interpolateEntities();
 		Gdx.gl.glClear( GL20.GL_COLOR_BUFFER_BIT );
 		cameraPosition.set(gameManager.getMainPlayer().position.x, gameManager.getMainPlayer().position.y, 0f);
 		camera.position.lerp(cameraPosition, SMOOTHING);

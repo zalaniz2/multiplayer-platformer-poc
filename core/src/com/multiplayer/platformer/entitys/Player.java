@@ -2,6 +2,10 @@ package com.multiplayer.platformer.entitys;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
+import com.multiplayer.platformer.packets.LerpState;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Player {
     public final float WIDTH = 1;
@@ -13,6 +17,7 @@ public class Player {
     public PlayerControls controls = new PlayerControls();
     public boolean grounded = false;
     public int lastProcessedInput = 0;
+    public List<LerpState> positionBuffer = new ArrayList<LerpState>();
 
     public Player(){}//default for server
     public Player(Texture texture){

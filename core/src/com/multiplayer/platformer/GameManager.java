@@ -8,6 +8,7 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.multiplayer.platformer.entitys.Player;
 import com.multiplayer.platformer.packets.InitPacket;
+import com.multiplayer.platformer.packets.LerpState;
 import com.multiplayer.platformer.packets.MovePacket;
 import com.multiplayer.platformer.packets.PlayerSnapshot;
 import com.multiplayer.platformer.packets.WorldStatePacket;
@@ -15,6 +16,7 @@ import com.multiplayer.platformer.physics.PlatformerPhysics;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +68,6 @@ public class GameManager {
         try {
             client.connect(5000, network.getHOST(), network.getTCP_PORT(), network.getUDP_PORT());
         } catch (IOException e) {
-            //e.printStackTrace();
             System.out.println("Error connecting to server..");
         }
     }
@@ -74,12 +75,10 @@ public class GameManager {
     private void applyWorldState(WorldStatePacket worldStatePacket) {
         for(PlayerSnapshot playerSnapshot: worldStatePacket.players){
             if(playerSnapshot.id == mainPlayer.id){
-                //System.out.println("Last processed from server: " + playerSnapshot.lastProcessedInput);
                 mainPlayer.position.x = playerSnapshot.authPosX;
                 mainPlayer.position.y = playerSnapshot.authPosY;
                 for(MovePacket movePacket: new ArrayList<MovePacket>(pendingInputs)){
                     if(movePacket.inputSequenceNumber <= playerSnapshot.lastProcessedInput){
-                        //System.out.println("Server already got this input: " + movePacket.inputSequenceNumber);
                         pendingInputs.remove(movePacket);
                     } else {
                         platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
@@ -89,14 +88,15 @@ public class GameManager {
                 //new player to add to local world
                 Player newPlayer = new Player(playerTexture);
                 newPlayer.id = playerSnapshot.id;
-                //temporarily set auth position without interpolating
                 newPlayer.position.x = playerSnapshot.authPosX;
                 newPlayer.position.y = playerSnapshot.authPosY;
                 otherPlayerList.put(newPlayer.id, newPlayer);
             } else {
                 Player player = otherPlayerList.get(playerSnapshot.id);
-                player.position.x = playerSnapshot.authPosX;
-                player.position.y = playerSnapshot.authPosY;
+                LerpState lerpState = new LerpState();
+                lerpState.playerSnapshot = playerSnapshot;
+                lerpState.timestamp = new Date().getTime();
+                player.positionBuffer.add(lerpState);
             }
         }
     }
@@ -128,7 +128,6 @@ public class GameManager {
         movePacket.left = mainPlayer.controls.left();
         movePacket.right = mainPlayer.controls.right();
         movePacket.inputSequenceNumber = inputSequenceNumber;
-        //System.out.println("Input is:" + inputSequenceNumber);
         client.sendTCP(movePacket);
         platformerPhysics.step(mainPlayer, delta, mainPlayer.controls.left(), mainPlayer.controls.right(), mainPlayer.controls.up());
         pendingInputs.add(movePacket);
@@ -136,5 +135,27 @@ public class GameManager {
 
     public Player getMainPlayer() {
         return mainPlayer;
+    }
+
+    public void interpolateEntities() {
+        long now = new Date().getTime();
+        long renderTimestamp = now - 100;
+        for(Player player: otherPlayerList.values()){
+            List<LerpState> lerpStates = new ArrayList<>(player.positionBuffer);
+            while(lerpStates.size() >= 3 && lerpStates.get(1).timestamp <= renderTimestamp){
+                player.positionBuffer.remove(0);
+                lerpStates.remove(0);
+            }
+            if(lerpStates.size() >= 2 && lerpStates.get(0).timestamp <= renderTimestamp && renderTimestamp <= lerpStates.get(1).timestamp){
+                float x0 = lerpStates.get(0).playerSnapshot.authPosX;
+                float x1 = lerpStates.get(1).playerSnapshot.authPosX;
+                float y0 = lerpStates.get(0).playerSnapshot.authPosY;
+                float y1 = lerpStates.get(1).playerSnapshot.authPosY;
+                long t0 = lerpStates.get(0).timestamp;
+                long t1 = lerpStates.get(1).timestamp;
+                player.position.x = x0 + (x1 - x0) * (renderTimestamp - t0) / (t1 - t0);
+                player.position.y = y0 + (y1 - y0) * (renderTimestamp - t0) / (t1 - t0);
+            }
+        }
     }
 }
