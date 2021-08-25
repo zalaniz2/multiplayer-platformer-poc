@@ -52,12 +52,6 @@ public class WorldServer {
             public void received (Connection connection, Object object) {
                 if(object instanceof MovePacket){
                     MovePacket movePacket = (MovePacket) object;
-//                    System.out.println("Received data \n " +
-//                            "ID:" + movePacket.id +
-//                            " delta: " + movePacket.delta +
-//                            " UP:" + movePacket.up +
-//                            " LEFT: " + movePacket.left +
-//                            " RIGHT: " + movePacket.right);
                     worldManager.applyInput(movePacket);
                 }
             }

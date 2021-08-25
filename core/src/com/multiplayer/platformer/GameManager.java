@@ -1,6 +1,8 @@
 package com.multiplayer.platformer;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
@@ -9,19 +11,28 @@ import com.multiplayer.platformer.packets.InitPacket;
 import com.multiplayer.platformer.packets.MovePacket;
 import com.multiplayer.platformer.packets.PlayerSnapshot;
 import com.multiplayer.platformer.packets.WorldStatePacket;
+import com.multiplayer.platformer.physics.PlatformerPhysics;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GameManager {
 
     private Player mainPlayer;
     private Client client;
     private Network network;
+    private int inputSequenceNumber = 0;
+    private List<MovePacket> pendingInputs = new ArrayList<MovePacket>();
+    private TiledMap gameMap;
+    private PlatformerPhysics platformerPhysics;
 
-    public GameManager(Player player){
+    public GameManager(Player player, TiledMap map){
         mainPlayer = player;
         client = new Client();
         network = new Network();
+        gameMap = map;
+        platformerPhysics = new PlatformerPhysics(gameMap);
     }
 
     public void connect(){
@@ -58,8 +69,17 @@ public class GameManager {
     private void applyWorldState(WorldStatePacket worldStatePacket) {
         for(PlayerSnapshot playerSnapshot: worldStatePacket.players){
             if(playerSnapshot.id == mainPlayer.id){
+                //System.out.println("Last processed from server: " + playerSnapshot.lastProcessedInput);
                 mainPlayer.position.x = playerSnapshot.authPosX;
                 mainPlayer.position.y = playerSnapshot.authPosY;
+                for(MovePacket movePacket: new ArrayList<MovePacket>(pendingInputs)){
+                    if(movePacket.inputSequenceNumber <= playerSnapshot.lastProcessedInput){
+                        //System.out.println("Server already got this input: " + movePacket.inputSequenceNumber);
+                        pendingInputs.remove(movePacket);
+                    } else {
+                        platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
+                    }
+                }
             }
         }
     }
@@ -81,12 +101,17 @@ public class GameManager {
 
     public void updatePlayer(float delta) {
         MovePacket movePacket = new MovePacket();
+        inputSequenceNumber++;
         movePacket.id = mainPlayer.id;
         movePacket.delta = delta;
         movePacket.up = mainPlayer.controls.up();
         movePacket.left = mainPlayer.controls.left();
         movePacket.right = mainPlayer.controls.right();
+        movePacket.inputSequenceNumber = inputSequenceNumber;
+        //System.out.println("Input is:" + inputSequenceNumber);
         client.sendTCP(movePacket);
+        platformerPhysics.step(mainPlayer, delta, mainPlayer.controls.left(), mainPlayer.controls.right(), mainPlayer.controls.up());
+        pendingInputs.add(movePacket);
     }
 
     public Player getMainPlayer() {

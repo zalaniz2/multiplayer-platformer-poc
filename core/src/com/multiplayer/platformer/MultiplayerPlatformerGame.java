@@ -61,7 +61,7 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 		Player player = new Player(texture);
 
 		//Pass in player as main player to manager
-		gameManager = new GameManager(player);
+		gameManager = new GameManager(player, map);
 
 		//set up rendering and camera
 		renderer = new OrthogonalTiledMapRenderer(map, UNIT_SCALE);

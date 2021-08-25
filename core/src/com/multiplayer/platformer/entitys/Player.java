@@ -12,6 +12,7 @@ public class Player {
     public Texture playerTexture;
     public PlayerControls controls = new PlayerControls();
     public boolean grounded = false;
+    public int lastProcessedInput = 0;
 
     public Player(){}//default for server
     public Player(Texture texture){
