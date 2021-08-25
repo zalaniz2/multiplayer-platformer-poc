@@ -57,11 +57,8 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 		widthInTiles = mapProperties.get("width", Integer.class);
 		heightInTiles = mapProperties.get("height", Integer.class);
 
-		//create connected player
-		Player player = new Player(texture);
-
 		//Pass in player as main player to manager
-		gameManager = new GameManager(player, map);
+		gameManager = new GameManager(texture, map);
 
 		//set up rendering and camera
 		renderer = new OrthogonalTiledMapRenderer(map, UNIT_SCALE);

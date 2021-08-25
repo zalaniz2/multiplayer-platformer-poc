@@ -1,6 +1,6 @@
 package com.multiplayer.platformer;
 
-import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.esotericsoftware.kryonet.Client;
@@ -15,7 +15,9 @@ import com.multiplayer.platformer.physics.PlatformerPhysics;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GameManager {
 
@@ -26,9 +28,12 @@ public class GameManager {
     private List<MovePacket> pendingInputs = new ArrayList<MovePacket>();
     private TiledMap gameMap;
     private PlatformerPhysics platformerPhysics;
+    private Texture playerTexture;
+    private Map<Integer, Player> otherPlayerList = new HashMap<Integer, Player>();
 
-    public GameManager(Player player, TiledMap map){
-        mainPlayer = player;
+    public GameManager(Texture texture, TiledMap map){
+        playerTexture = texture;
+        mainPlayer = new Player(playerTexture);
         client = new Client();
         network = new Network();
         gameMap = map;
@@ -80,6 +85,18 @@ public class GameManager {
                         platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
                     }
                 }
+            } else if(otherPlayerList.get(playerSnapshot.id) == null){
+                //new player to add to local world
+                Player newPlayer = new Player(playerTexture);
+                newPlayer.id = playerSnapshot.id;
+                //temporarily set auth position without interpolating
+                newPlayer.position.x = playerSnapshot.authPosX;
+                newPlayer.position.y = playerSnapshot.authPosY;
+                otherPlayerList.put(newPlayer.id, newPlayer);
+            } else {
+                Player player = otherPlayerList.get(playerSnapshot.id);
+                player.position.x = playerSnapshot.authPosX;
+                player.position.y = playerSnapshot.authPosY;
             }
         }
     }
@@ -97,6 +114,9 @@ public class GameManager {
     public void render(SpriteBatch batch){
         batch.draw(mainPlayer.playerTexture, mainPlayer.position.x,
                 mainPlayer.position.y, mainPlayer.WIDTH, mainPlayer.HEIGHT);
+        for(Player player: otherPlayerList.values()){
+            batch.draw(player.playerTexture, player.position.x, player.position.y, player.WIDTH, player.HEIGHT);
+        }
     }
 
     public void updatePlayer(float delta) {
