@@ -10,6 +10,7 @@ public class DesktopLauncher {
 		config.forceExit = false;
 		config.width = 800;
 		config.height = 600;
+		config.title = "Platformer";
 		new LwjglApplication(new MultiplayerPlatformerGame(), config);
 	}
 }

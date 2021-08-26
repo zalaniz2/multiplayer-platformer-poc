@@ -1,5 +1,7 @@
 package com.multiplayer.platformer;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -23,6 +25,7 @@ import java.util.Map;
 
 public class GameManager {
 
+    private final long SERVER_RATE = 100; //100m/s
     private Player mainPlayer;
     private Client client;
     private Network network;
@@ -32,6 +35,8 @@ public class GameManager {
     private PlatformerPhysics platformerPhysics;
     private Texture playerTexture;
     private Map<Integer, Player> otherPlayerList = new HashMap<Integer, Player>();
+    private long jumpTime = 0;
+    private double coolDownTime = 1200;
 
     public GameManager(Texture texture, TiledMap map){
         playerTexture = texture;
@@ -95,7 +100,7 @@ public class GameManager {
                 Player player = otherPlayerList.get(playerSnapshot.id);
                 LerpState lerpState = new LerpState();
                 lerpState.playerSnapshot = playerSnapshot;
-                lerpState.timestamp = new Date().getTime();
+                lerpState.timestamp = System.currentTimeMillis();
                 player.positionBuffer.add(lerpState);
             }
         }
@@ -138,8 +143,8 @@ public class GameManager {
     }
 
     public void interpolateEntities() {
-        long now = new Date().getTime();
-        long renderTimestamp = now - 100;
+        long now = System.currentTimeMillis();
+        long renderTimestamp = now - SERVER_RATE; //interpolate 100m/s in the past
         for(Player player: otherPlayerList.values()){
             List<LerpState> lerpStates = new ArrayList<>(player.positionBuffer);
             while(lerpStates.size() >= 3 && lerpStates.get(1).timestamp <= renderTimestamp){

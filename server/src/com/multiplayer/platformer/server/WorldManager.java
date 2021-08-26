@@ -1,9 +1,7 @@
 package com.multiplayer.platformer.server;
 
 import com.badlogic.gdx.Game;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.assets.loaders.resolvers.ExternalFileHandleResolver;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -48,6 +46,11 @@ public class WorldManager extends Game {
 
     @Override
     public void render(){
+//        try {
+//            TimeUnit.MILLISECONDS.sleep(250); //simulate lag
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         //gather world state and send to all connected clients
         worldStatePacket.players.clear();
         for(Player player: playerList.values()){
