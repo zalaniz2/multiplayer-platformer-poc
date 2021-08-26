@@ -51,6 +51,7 @@ public class WorldServer {
             }
             public void received (Connection connection, Object object) {
                 if(object instanceof MovePacket){
+                    System.out.println("Move pakcet from:" + connection.getID());
                     MovePacket movePacket = (MovePacket) object;
                     worldManager.applyInput(movePacket);
                 }

@@ -1,5 +1,7 @@
 package com.multiplayer.platformer;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -32,6 +34,8 @@ public class GameManager {
     private PlatformerPhysics platformerPhysics;
     private Texture playerTexture;
     private Map<Integer, Player> otherPlayerList = new HashMap<Integer, Player>();
+    private long lastPressedUp = 0;
+
 
     public GameManager(Texture texture, TiledMap map){
         playerTexture = texture;
@@ -120,14 +124,19 @@ public class GameManager {
     }
 
     public void updatePlayer(float delta) {
+
         MovePacket movePacket = new MovePacket();
         inputSequenceNumber++;
+        movePacket.inputSequenceNumber = inputSequenceNumber;
         movePacket.id = mainPlayer.id;
         movePacket.delta = delta;
         movePacket.up = mainPlayer.controls.up();
         movePacket.left = mainPlayer.controls.left();
         movePacket.right = mainPlayer.controls.right();
-        movePacket.inputSequenceNumber = inputSequenceNumber;
+        if(!movePacket.left && !movePacket.right && !movePacket.up &&
+                mainPlayer.grounded && mainPlayer.velocity.x == 0 && mainPlayer.velocity.y == 0){
+            return; //doing nothing
+        }
         client.sendTCP(movePacket);
         platformerPhysics.step(mainPlayer, delta, mainPlayer.controls.left(), mainPlayer.controls.right(), mainPlayer.controls.up());
         pendingInputs.add(movePacket);
@@ -139,10 +148,10 @@ public class GameManager {
 
     public void interpolateEntities() {
         long now = System.currentTimeMillis();
-        long renderTimestamp = now - SERVER_RATE; //interpolate 100m/s in the past
+        long renderTimestamp = now - SERVER_RATE;//interpolate 100m/s in the past
         for(Player player: otherPlayerList.values()){
             List<LerpState> lerpStates = new ArrayList<>(player.positionBuffer);
-            while(lerpStates.size() >= 3 && lerpStates.get(1).timestamp <= renderTimestamp){
+            while(lerpStates.size() >= 2 && lerpStates.get(1).timestamp <= renderTimestamp){
                 player.positionBuffer.remove(0);
                 lerpStates.remove(0);
             }

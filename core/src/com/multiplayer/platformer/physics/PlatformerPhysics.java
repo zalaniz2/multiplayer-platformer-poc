@@ -15,7 +15,7 @@ public class PlatformerPhysics {
 
     private final float GRAVITY = -55f;
     private final float JUMP_VELOCITY = 12f;
-    private final float MAX_VELOCITY = 4f;
+    private final float MAX_VELOCITY = 3.3f;
     private final float DAMPING = 0.87f;
 
     private Pool<Rectangle> rectPool = new Pool<Rectangle>() {
@@ -106,8 +106,6 @@ public class PlatformerPhysics {
         }
         rectPool.free(playerRectangle);
         player.position.add(player.velocity);
-        //player.velocity.x *= 1/delta;
-        //player.velocity.y *= 1/delta;
         player.velocity.scl(1 / delta);
         player.velocity.x *= DAMPING;
     }
