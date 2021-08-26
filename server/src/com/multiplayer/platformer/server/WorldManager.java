@@ -15,6 +15,7 @@ import com.multiplayer.platformer.physics.PlatformerPhysics;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class WorldManager extends Game {
 
@@ -47,7 +48,7 @@ public class WorldManager extends Game {
     @Override
     public void render(){
 //        try {
-//            TimeUnit.MILLISECONDS.sleep(250); //simulate lag
+//            TimeUnit.MILLISECONDS.sleep(100); //simulate lag
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();
 //        }

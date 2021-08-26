@@ -1,7 +1,5 @@
 package com.multiplayer.platformer;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -18,7 +16,6 @@ import com.multiplayer.platformer.physics.PlatformerPhysics;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,8 +32,6 @@ public class GameManager {
     private PlatformerPhysics platformerPhysics;
     private Texture playerTexture;
     private Map<Integer, Player> otherPlayerList = new HashMap<Integer, Player>();
-    private long jumpTime = 0;
-    private double coolDownTime = 1200;
 
     public GameManager(Texture texture, TiledMap map){
         playerTexture = texture;

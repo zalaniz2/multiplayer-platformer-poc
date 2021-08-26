@@ -7,6 +7,7 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -25,6 +26,7 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 
 	private AssetManager assetManager;
 	private SpriteBatch batch;
+	private SpriteBatch textBatch;
 	private TiledMap map;
 	private OrthogonalTiledMapRenderer renderer;
 	private OrthographicCamera camera;
@@ -35,12 +37,16 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 	private int heightInTiles;
 	private MapProperties mapProperties;
 	private float delta;
-	
+	private BitmapFont font;
+
+
 	@Override
 	public void create () {
 		//set background clear color
 		Gdx.gl.glClearColor( 3/255f, 198/255f, 252/255f, 1 );
 		batch = new SpriteBatch();
+		font = new BitmapFont();
+		textBatch = new SpriteBatch();
 
 		//load all assets
 		assetManager = new AssetManager();
@@ -85,6 +91,9 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 		camera.update();
 		renderer.setView(camera);
 		renderer.render();
+		textBatch.begin();
+		font.draw(textBatch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, 20);
+		textBatch.end();
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
 		gameManager.render(batch);
@@ -93,5 +102,10 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 	
 	@Override
 	public void dispose () {
+		assetManager.dispose();
+		texture.dispose();
+		map.dispose();
+		batch.dispose();
+		font.dispose();
 	}
 }

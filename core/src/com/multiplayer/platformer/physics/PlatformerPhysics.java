@@ -13,7 +13,7 @@ public class PlatformerPhysics {
     private TiledMap map;
     private TiledMapTileLayer layer;
 
-    private final float GRAVITY = -1f;
+    private final float GRAVITY = -55f;
     private final float JUMP_VELOCITY = 12f;
     private final float MAX_VELOCITY = 4f;
     private final float DAMPING = 0.87f;
@@ -50,6 +50,9 @@ public class PlatformerPhysics {
            // if (player.grounded) player.state = Player.State.Walking;
             //player.facesRight = true;
         }
+
+        player.velocity.add(0, GRAVITY*delta);
+
         player.velocity.x = MathUtils.clamp(player.velocity.x, -MAX_VELOCITY, MAX_VELOCITY);
 
         if (Math.abs(player.velocity.x) < 1) {
@@ -57,8 +60,8 @@ public class PlatformerPhysics {
             //if (player.grounded) player.state = Player.State.Standing;
         }
 
-        player.velocity.add(0, GRAVITY);
         player.velocity.scl(delta);
+
 
         Rectangle playerRectangle = rectPool.obtain();
         playerRectangle.set(player.position.x, player.position.y, player.WIDTH, player.HEIGHT);
@@ -103,6 +106,8 @@ public class PlatformerPhysics {
         }
         rectPool.free(playerRectangle);
         player.position.add(player.velocity);
+        //player.velocity.x *= 1/delta;
+        //player.velocity.y *= 1/delta;
         player.velocity.scl(1 / delta);
         player.velocity.x *= DAMPING;
     }
