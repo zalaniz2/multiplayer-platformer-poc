@@ -82,6 +82,8 @@ public class GameManager {
                 mainPlayer.position.x = playerSnapshot.authPosX;
                 mainPlayer.position.y = playerSnapshot.authPosY;
                 for(MovePacket movePacket: new ArrayList<MovePacket>(pendingInputs)){
+                   // System.out.println("My input num is: " + inputSequenceNumber);
+                   // System.out.println("Im looking at :" + movePacket.inputSequenceNumber);
                     if(movePacket.inputSequenceNumber <= playerSnapshot.lastProcessedInput){
                         pendingInputs.remove(movePacket);
                     } else {
@@ -133,10 +135,10 @@ public class GameManager {
         movePacket.up = mainPlayer.controls.up();
         movePacket.left = mainPlayer.controls.left();
         movePacket.right = mainPlayer.controls.right();
-        if(!movePacket.left && !movePacket.right && !movePacket.up &&
-                mainPlayer.grounded && mainPlayer.velocity.x == 0 && mainPlayer.velocity.y == 0){
-            return; //doing nothing
-        }
+//        if(!movePacket.left && !movePacket.right && !movePacket.up &&
+//                mainPlayer.grounded && mainPlayer.velocity.x == 0 && mainPlayer.velocity.y == 0){
+//            return; //doing nothing
+//        }
         client.sendTCP(movePacket);
         platformerPhysics.step(mainPlayer, delta, mainPlayer.controls.left(), mainPlayer.controls.right(), mainPlayer.controls.up());
         pendingInputs.add(movePacket);
