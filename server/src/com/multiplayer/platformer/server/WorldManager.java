@@ -49,11 +49,11 @@ public class WorldManager extends Game {
 
     @Override
     public void render(){
-        try {
-            TimeUnit.MILLISECONDS.sleep(200); //simulate lag
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            TimeUnit.MILLISECONDS.sleep(200); //simulate lag
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         //gather world state and send to all connected clients
         //applyAllInput();
         worldStatePacket.players.clear();
