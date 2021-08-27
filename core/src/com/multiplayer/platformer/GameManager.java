@@ -17,8 +17,11 @@ import com.multiplayer.platformer.physics.PlatformerPhysics;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.TimeUnit;
 
 public class GameManager {
 
@@ -31,6 +34,7 @@ public class GameManager {
     private PlatformerPhysics platformerPhysics;
     private Texture playerTexture;
     private Map<Integer, Player> otherPlayerList = new HashMap<Integer, Player>();
+    public Queue<MovePacket> pendingInputs = new LinkedList<MovePacket>();
 
     public GameManager(Texture texture, TiledMap map){
         playerTexture = texture;
@@ -74,9 +78,17 @@ public class GameManager {
     private void applyWorldState(WorldStatePacket worldStatePacket) {
         for(PlayerSnapshot playerSnapshot: worldStatePacket.players){
             if(mainPlayer.id == playerSnapshot.id){
-                continue;
+                //System.out.println("Last processed: " + playerSnapshot.lastProcessedInput);
+                mainPlayer.position.x = playerSnapshot.authPosX;
+                mainPlayer.position.y = playerSnapshot.authPosY;
+                while(pendingInputs.size() >=1 && pendingInputs.peek().inputSequenceNumber<= playerSnapshot.lastProcessedInput ){
+                    pendingInputs.remove();
+                }
+                for(MovePacket movePacket: pendingInputs){
+                    platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
+                }
             }
-            if(otherPlayerList.get(playerSnapshot.id) == null){
+            else if(otherPlayerList.get(playerSnapshot.id) == null){
                 //new player to add to local world
                 Player newPlayer = new Player(playerTexture);
                 newPlayer.id = playerSnapshot.id;
@@ -121,8 +133,10 @@ public class GameManager {
                 mainPlayer.grounded && mainPlayer.velocity.x == 0 && mainPlayer.velocity.y == 0){
             return; //doing nothing
         }
+        movePacket.inputSequenceNumber = inputSequenceNumber++;
         client.sendTCP(movePacket);
         platformerPhysics.step(mainPlayer, delta, movePacket.left, movePacket.right, movePacket.up);
+        pendingInputs.add(movePacket);
     }
 
     public Player getMainPlayer() {
