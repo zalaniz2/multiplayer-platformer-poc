@@ -1,6 +1,7 @@
 package com.multiplayer.platformer.server;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -13,6 +14,7 @@ import com.multiplayer.platformer.packets.WorldStatePacket;
 import com.multiplayer.platformer.physics.PlatformerPhysics;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +28,7 @@ public class WorldManager extends Game {
     private PlatformerPhysics platformerPhysics;
     private TiledMap map;
     private WorldStatePacket worldStatePacket = new WorldStatePacket();
+    private ArrayList<MovePacket> pendingInput = new ArrayList<MovePacket>();
 
     @Override
     public void create() {
@@ -53,6 +56,7 @@ public class WorldManager extends Game {
 //            e.printStackTrace();
 //        }
         //gather world state and send to all connected clients
+        applyAllInput();
         worldStatePacket.players.clear();
         for(Player player: playerList.values()){
             PlayerSnapshot snapshot = new PlayerSnapshot();
@@ -63,6 +67,16 @@ public class WorldManager extends Game {
             worldStatePacket.players.add(snapshot);
         }
         WorldServer.server.sendToAllTCP(worldStatePacket);
+    }
+
+    private void applyAllInput() {
+        //System.out.println("pending size is: " + pendingInput.size());
+        for(MovePacket movePacket: pendingInput){
+            Player player = playerList.get(movePacket.id);
+            platformerPhysics.step(player, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
+            player.lastProcessedInput = movePacket.inputSequenceNumber;
+        }
+        pendingInput.clear();
     }
 
     @Override
@@ -97,5 +111,9 @@ public class WorldManager extends Game {
 
     public static WorldManager getGame () {
         return worldManager;
+    }
+
+    public void storeInput(MovePacket movePacket) {
+        pendingInput.add(movePacket);
     }
 }

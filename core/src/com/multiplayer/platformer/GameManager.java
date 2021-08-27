@@ -1,7 +1,5 @@
 package com.multiplayer.platformer;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -34,8 +32,6 @@ public class GameManager {
     private PlatformerPhysics platformerPhysics;
     private Texture playerTexture;
     private Map<Integer, Player> otherPlayerList = new HashMap<Integer, Player>();
-    private long lastPressedUp = 0;
-
 
     public GameManager(Texture texture, TiledMap map){
         playerTexture = texture;
@@ -81,9 +77,9 @@ public class GameManager {
             if(playerSnapshot.id == mainPlayer.id){
                 mainPlayer.position.x = playerSnapshot.authPosX;
                 mainPlayer.position.y = playerSnapshot.authPosY;
+                System.out.println("Currently at: " + inputSequenceNumber);
+                System.out.println("Should apply from: " + playerSnapshot.lastProcessedInput);
                 for(MovePacket movePacket: new ArrayList<MovePacket>(pendingInputs)){
-                   // System.out.println("My input num is: " + inputSequenceNumber);
-                   // System.out.println("Im looking at :" + movePacket.inputSequenceNumber);
                     if(movePacket.inputSequenceNumber <= playerSnapshot.lastProcessedInput){
                         pendingInputs.remove(movePacket);
                     } else {
@@ -126,19 +122,19 @@ public class GameManager {
     }
 
     public void updatePlayer(float delta) {
-
         MovePacket movePacket = new MovePacket();
-        movePacket.inputSequenceNumber = inputSequenceNumber++;
+        movePacket.inputSequenceNumber = inputSequenceNumber;
         movePacket.id = mainPlayer.id;
         movePacket.delta = delta;
         movePacket.up = mainPlayer.controls.up();
         movePacket.left = mainPlayer.controls.left();
         movePacket.right = mainPlayer.controls.right();
-//        if(!movePacket.left && !movePacket.right && !movePacket.up &&
-//                mainPlayer.grounded && mainPlayer.velocity.x == 0 && mainPlayer.velocity.y == 0){
-//            return; //doing nothing
-//        }
+        if(!movePacket.left && !movePacket.right && !movePacket.up &&
+                mainPlayer.grounded && mainPlayer.velocity.x == 0 && mainPlayer.velocity.y == 0){
+            return; //doing nothing
+        }
         client.sendTCP(movePacket);
+        inputSequenceNumber++;
         platformerPhysics.step(mainPlayer, delta, mainPlayer.controls.left(), mainPlayer.controls.right(), mainPlayer.controls.up());
         pendingInputs.add(movePacket);
     }

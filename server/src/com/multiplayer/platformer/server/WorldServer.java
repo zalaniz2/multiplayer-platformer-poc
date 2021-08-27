@@ -10,6 +10,7 @@ import com.multiplayer.platformer.packets.MovePacket;
 import com.multiplayer.platformer.physics.PlatformerPhysics;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class WorldServer {
 
@@ -49,7 +50,7 @@ public class WorldServer {
             public void received (Connection connection, Object object) {
                 if(object instanceof MovePacket){
                     MovePacket movePacket = (MovePacket) object;
-                    worldManager.applyInput(movePacket);
+                    worldManager.storeInput(movePacket);
                 }
             }
             public void disconnected (Connection connection) {
