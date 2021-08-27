@@ -1,8 +1,5 @@
 package com.multiplayer.platformer.server;
 
-import com.badlogic.gdx.backends.headless.HeadlessApplication;
-import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
-import com.badlogic.gdx.backends.headless.HeadlessNativesLoader;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
@@ -17,7 +14,7 @@ import java.io.IOException;
 public class WorldServer {
 
     private final float SPAWN_X = 3;
-    private final float SPAWN_Y = 5;
+    private final float SPAWN_Y = 3;
 
     public static Server server;
     private WorldManager worldManager;
@@ -51,7 +48,6 @@ public class WorldServer {
             }
             public void received (Connection connection, Object object) {
                 if(object instanceof MovePacket){
-                    System.out.println("Move pakcet from:" + connection.getID());
                     MovePacket movePacket = (MovePacket) object;
                     worldManager.applyInput(movePacket);
                 }
