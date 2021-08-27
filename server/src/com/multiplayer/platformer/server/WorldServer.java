@@ -14,7 +14,7 @@ import java.io.IOException;
 public class WorldServer {
 
     private final float SPAWN_X = 3;
-    private final float SPAWN_Y = 3;
+    private final float SPAWN_Y = 5;
 
     public static Server server;
     private WorldManager worldManager;

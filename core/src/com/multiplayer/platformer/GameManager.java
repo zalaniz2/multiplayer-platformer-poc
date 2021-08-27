@@ -128,8 +128,7 @@ public class GameManager {
     public void updatePlayer(float delta) {
 
         MovePacket movePacket = new MovePacket();
-        inputSequenceNumber++;
-        movePacket.inputSequenceNumber = inputSequenceNumber;
+        movePacket.inputSequenceNumber = inputSequenceNumber++;
         movePacket.id = mainPlayer.id;
         movePacket.delta = delta;
         movePacket.up = mainPlayer.controls.up();
