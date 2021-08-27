@@ -50,7 +50,8 @@ public class WorldServer {
             public void received (Connection connection, Object object) {
                 if(object instanceof MovePacket){
                     MovePacket movePacket = (MovePacket) object;
-                    worldManager.storeInput(movePacket);
+                    //worldManager.storeInput(movePacket);
+                    worldManager.applyInput(movePacket);
                 }
             }
             public void disconnected (Connection connection) {

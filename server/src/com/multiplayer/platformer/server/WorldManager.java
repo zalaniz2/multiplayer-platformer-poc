@@ -1,7 +1,6 @@
 package com.multiplayer.platformer.server;
 
 import com.badlogic.gdx.Game;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -50,33 +49,22 @@ public class WorldManager extends Game {
 
     @Override
     public void render(){
-//        try {
-//            TimeUnit.MILLISECONDS.sleep(100); //simulate lag
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            TimeUnit.MILLISECONDS.sleep(200); //simulate lag
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         //gather world state and send to all connected clients
-        applyAllInput();
+        //applyAllInput();
         worldStatePacket.players.clear();
         for(Player player: playerList.values()){
             PlayerSnapshot snapshot = new PlayerSnapshot();
             snapshot.id = player.id;
             snapshot.authPosX = player.position.x;
             snapshot.authPosY = player.position.y;
-            snapshot.lastProcessedInput = player.lastProcessedInput;
             worldStatePacket.players.add(snapshot);
         }
         WorldServer.server.sendToAllTCP(worldStatePacket);
-    }
-
-    private void applyAllInput() {
-        //System.out.println("pending size is: " + pendingInput.size());
-        for(MovePacket movePacket: pendingInput){
-            Player player = playerList.get(movePacket.id);
-            platformerPhysics.step(player, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
-            player.lastProcessedInput = movePacket.inputSequenceNumber;
-        }
-        pendingInput.clear();
     }
 
     @Override
@@ -106,14 +94,8 @@ public class WorldManager extends Game {
 
     public void applyInput(MovePacket movePacket){
         platformerPhysics.step(playerList.get(movePacket.id), movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
-        playerList.get(movePacket.id).lastProcessedInput = movePacket.inputSequenceNumber; //set last processed for this player
     }
-
     public static WorldManager getGame () {
         return worldManager;
-    }
-
-    public void storeInput(MovePacket movePacket) {
-        pendingInput.add(movePacket);
     }
 }

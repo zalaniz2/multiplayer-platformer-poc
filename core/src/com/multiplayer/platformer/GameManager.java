@@ -27,7 +27,6 @@ public class GameManager {
     private Client client;
     private Network network;
     private int inputSequenceNumber = 0;
-    private List<MovePacket> pendingInputs = new ArrayList<MovePacket>();
     private TiledMap gameMap;
     private PlatformerPhysics platformerPhysics;
     private Texture playerTexture;
@@ -74,19 +73,10 @@ public class GameManager {
 
     private void applyWorldState(WorldStatePacket worldStatePacket) {
         for(PlayerSnapshot playerSnapshot: worldStatePacket.players){
-            if(playerSnapshot.id == mainPlayer.id){
-                mainPlayer.position.x = playerSnapshot.authPosX;
-                mainPlayer.position.y = playerSnapshot.authPosY;
-                System.out.println("Currently at: " + inputSequenceNumber);
-                System.out.println("Should apply from: " + playerSnapshot.lastProcessedInput);
-                for(MovePacket movePacket: new ArrayList<MovePacket>(pendingInputs)){
-                    if(movePacket.inputSequenceNumber <= playerSnapshot.lastProcessedInput){
-                        pendingInputs.remove(movePacket);
-                    } else {
-                        platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
-                    }
-                }
-            } else if(otherPlayerList.get(playerSnapshot.id) == null){
+            if(mainPlayer.id == playerSnapshot.id){
+                continue;
+            }
+            if(otherPlayerList.get(playerSnapshot.id) == null){
                 //new player to add to local world
                 Player newPlayer = new Player(playerTexture);
                 newPlayer.id = playerSnapshot.id;
@@ -106,7 +96,6 @@ public class GameManager {
     public void initializeMainPlayer(InitPacket initPacket){
         mainPlayer.id = initPacket.id;
         mainPlayer.position.set(initPacket.spawnX, initPacket.spawnY);
-        System.out.println("Your id is: " + mainPlayer.id);
     }
 
     public boolean isInitialized(){
@@ -114,16 +103,15 @@ public class GameManager {
     }
 
     public void render(SpriteBatch batch){
-        batch.draw(mainPlayer.playerTexture, mainPlayer.position.x,
-                mainPlayer.position.y, mainPlayer.WIDTH, mainPlayer.HEIGHT);
         for(Player player: otherPlayerList.values()){
             batch.draw(player.playerTexture, player.position.x, player.position.y, player.WIDTH, player.HEIGHT);
         }
+        batch.draw(mainPlayer.playerTexture, mainPlayer.position.x,
+                mainPlayer.position.y, mainPlayer.WIDTH, mainPlayer.HEIGHT);
     }
 
     public void updatePlayer(float delta) {
         MovePacket movePacket = new MovePacket();
-        movePacket.inputSequenceNumber = inputSequenceNumber;
         movePacket.id = mainPlayer.id;
         movePacket.delta = delta;
         movePacket.up = mainPlayer.controls.up();
@@ -134,9 +122,7 @@ public class GameManager {
             return; //doing nothing
         }
         client.sendTCP(movePacket);
-        inputSequenceNumber++;
-        platformerPhysics.step(mainPlayer, delta, mainPlayer.controls.left(), mainPlayer.controls.right(), mainPlayer.controls.up());
-        pendingInputs.add(movePacket);
+        platformerPhysics.step(mainPlayer, delta, movePacket.left, movePacket.right, movePacket.up);
     }
 
     public Player getMainPlayer() {

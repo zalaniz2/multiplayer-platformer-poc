@@ -13,7 +13,7 @@ public class Network {
 
     private final int TCP_PORT = 54555;
     private final int UDP_PORT = 54777;
-    private final String HOST = "161.35.191.203"; //vps host
+    private final String HOST = "127.0.0.1";//"161.35.191.203"; //vps host
 
     public void register(EndPoint endPoint){
         Kryo kryo = endPoint.getKryo();
