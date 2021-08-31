@@ -84,14 +84,19 @@ public class GameManager {
     private void applyWorldState(WorldStatePacket worldStatePacket) {
         for(PlayerSnapshot playerSnapshot: worldStatePacket.players){
             if(mainPlayer.id == playerSnapshot.id){
+                System.out.println("currently on " + inputSequenceNumber);
+                System.out.println("last processed is " + playerSnapshot.lastProcessedInput);
                 mainPlayer.position.x = playerSnapshot.authPosX;
                 mainPlayer.position.y = playerSnapshot.authPosY;
                 while(pendingInputs.size()>0 && pendingInputs.peek().inputSequenceNumber<= playerSnapshot.lastProcessedInput){
+                    System.out.println("Removed " + pendingInputs.peek().inputSequenceNumber);
                     pendingInputs.remove();
                 }
                 for(MovePacket movePacket: pendingInputs){
+                    System.out.println("Reapplying " + movePacket.inputSequenceNumber);
                     platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
                 }
+                System.out.println("Size after: " + pendingInputs.size());
             }
             else if(otherPlayerList.get(playerSnapshot.id) == null){
                 //new player to add to local world
@@ -138,7 +143,7 @@ public class GameManager {
                 mainPlayer.grounded && mainPlayer.velocity.x == 0 && mainPlayer.velocity.y == 0){
             return; //doing nothing
         }
-        movePacket.inputSequenceNumber = inputSequenceNumber++;
+        movePacket.inputSequenceNumber = ++inputSequenceNumber;
         client.sendTCP(movePacket);
         platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
         pendingInputs.add(movePacket);
