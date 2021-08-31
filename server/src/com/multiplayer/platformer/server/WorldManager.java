@@ -53,6 +53,7 @@ public class WorldManager extends Game {
             snapshot.id = player.id;
             snapshot.authPosX = player.position.x;
             snapshot.authPosY = player.position.y;
+            snapshot.lastProcessedInput = player.inputSequenceNumber;
             worldStatePacket.players.add(snapshot);
         }
         WorldServer.server.sendToAllTCP(worldStatePacket);
@@ -84,6 +85,7 @@ public class WorldManager extends Game {
     }
 
     public void applyInput(MovePacket movePacket){
+        playerList.get(movePacket.id).inputSequenceNumber = movePacket.inputSequenceNumber;
         platformerPhysics.step(playerList.get(movePacket.id), movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
     }
     public static WorldManager getGame () {

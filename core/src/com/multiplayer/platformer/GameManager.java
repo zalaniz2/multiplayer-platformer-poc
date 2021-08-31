@@ -34,6 +34,8 @@ public class GameManager {
     private PlatformerPhysics platformerPhysics;
     private Texture playerTexture;
     private Map<Integer, Player> otherPlayerList = new HashMap<Integer, Player>();
+    private Queue<MovePacket> pendingInputs = new LinkedList<>();
+    private int inputSequenceNumber = 0;
 
     public GameManager(Texture texture, TiledMap map){
         playerTexture = texture;
@@ -82,10 +84,13 @@ public class GameManager {
     private void applyWorldState(WorldStatePacket worldStatePacket) {
         for(PlayerSnapshot playerSnapshot: worldStatePacket.players){
             if(mainPlayer.id == playerSnapshot.id){
-                System.out.println(mainPlayer.position.dst(new Vector2(playerSnapshot.authPosX, playerSnapshot.authPosY)));
-                //resync if dysnc by too much due to lag
-                if(mainPlayer.position.dst(new Vector2(playerSnapshot.authPosX, playerSnapshot.authPosY)) >= 2f ) {
-                    mainPlayer.position = new Vector2(playerSnapshot.authPosX, playerSnapshot.authPosY);
+                mainPlayer.position.x = playerSnapshot.authPosX;
+                mainPlayer.position.y = playerSnapshot.authPosY;
+                while(pendingInputs.size()>0 && pendingInputs.peek().inputSequenceNumber<= playerSnapshot.lastProcessedInput){
+                    pendingInputs.remove();
+                }
+                for(MovePacket movePacket: pendingInputs){
+                    platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
                 }
             }
             else if(otherPlayerList.get(playerSnapshot.id) == null){
@@ -133,8 +138,10 @@ public class GameManager {
                 mainPlayer.grounded && mainPlayer.velocity.x == 0 && mainPlayer.velocity.y == 0){
             return; //doing nothing
         }
+        movePacket.inputSequenceNumber = inputSequenceNumber++;
         client.sendTCP(movePacket);
-        platformerPhysics.step(mainPlayer, delta, movePacket.left, movePacket.right, movePacket.up);
+        platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
+        pendingInputs.add(movePacket);
     }
 
     public Player getMainPlayer() {
