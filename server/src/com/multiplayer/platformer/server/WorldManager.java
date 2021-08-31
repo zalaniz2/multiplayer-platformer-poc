@@ -13,10 +13,8 @@ import com.multiplayer.platformer.packets.WorldStatePacket;
 import com.multiplayer.platformer.physics.PlatformerPhysics;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class WorldManager extends Game {
 
@@ -27,7 +25,6 @@ public class WorldManager extends Game {
     private PlatformerPhysics platformerPhysics;
     private TiledMap map;
     private WorldStatePacket worldStatePacket = new WorldStatePacket();
-    private ArrayList<MovePacket> pendingInput = new ArrayList<MovePacket>();
 
     @Override
     public void create() {
@@ -49,20 +46,13 @@ public class WorldManager extends Game {
 
     @Override
     public void render(){
-//        try {
-//            TimeUnit.MILLISECONDS.sleep(200); //simulate lag
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
         //gather world state and send to all connected clients
-        //applyAllInput();
         worldStatePacket.players.clear();
         for(Player player: playerList.values()){
             PlayerSnapshot snapshot = new PlayerSnapshot();
             snapshot.id = player.id;
             snapshot.authPosX = player.position.x;
             snapshot.authPosY = player.position.y;
-            snapshot.lastProcessedInput = player.inputSequenceNumber;
             worldStatePacket.players.add(snapshot);
         }
         WorldServer.server.sendToAllTCP(worldStatePacket);
@@ -94,7 +84,6 @@ public class WorldManager extends Game {
     }
 
     public void applyInput(MovePacket movePacket){
-        playerList.get(movePacket.id).inputSequenceNumber = movePacket.inputSequenceNumber;
         platformerPhysics.step(playerList.get(movePacket.id), movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
     }
     public static WorldManager getGame () {

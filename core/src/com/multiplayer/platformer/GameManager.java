@@ -1,8 +1,10 @@
 package com.multiplayer.platformer;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.math.Vector2;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
@@ -13,7 +15,6 @@ import com.multiplayer.platformer.packets.MovePacket;
 import com.multiplayer.platformer.packets.PlayerSnapshot;
 import com.multiplayer.platformer.packets.WorldStatePacket;
 import com.multiplayer.platformer.physics.PlatformerPhysics;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,12 +30,10 @@ public class GameManager {
     private Player mainPlayer;
     private Client client;
     private Network network;
-    private int inputSequenceNumber = 0;
     private TiledMap gameMap;
     private PlatformerPhysics platformerPhysics;
     private Texture playerTexture;
     private Map<Integer, Player> otherPlayerList = new HashMap<Integer, Player>();
-    public Queue<MovePacket> pendingInputs = new LinkedList<MovePacket>();
 
     public GameManager(Texture texture, TiledMap map){
         playerTexture = texture;
@@ -47,7 +46,7 @@ public class GameManager {
 
     public void connect(){
         network.register(client); //register common classes to send/receive
-        client.addListener(new Listener() {
+        Listener listener = new Listener() {
             public void connected(Connection connection) {
                 System.out.println("Connected to server..");
             }
@@ -65,6 +64,11 @@ public class GameManager {
             public void disconnected(Connection connection) {
                 System.out.println("Disconnected from server..");
             }
+        };
+        client.addListener(new Listener.QueuedListener(listener) {
+            protected void queue (Runnable runnable) {
+                Gdx.app.postRunnable(runnable);
+            }
         });
         //Start client and attempt to connect to server
         client.start();
@@ -78,16 +82,11 @@ public class GameManager {
     private void applyWorldState(WorldStatePacket worldStatePacket) {
         for(PlayerSnapshot playerSnapshot: worldStatePacket.players){
             if(mainPlayer.id == playerSnapshot.id){
-                //System.out.println("Last processed: " + playerSnapshot.lastProcessedInput);
-//                mainPlayer.position.x = playerSnapshot.authPosX;
-//                mainPlayer.position.y = playerSnapshot.authPosY;
-//                while(pendingInputs.size() >=1 && pendingInputs.peek().inputSequenceNumber < playerSnapshot.lastProcessedInput ){
-//                    pendingInputs.remove();
-//                }
-//                for(MovePacket movePacket: pendingInputs){
-//                    platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
-//                }
-                continue;
+                System.out.println(mainPlayer.position.dst(new Vector2(playerSnapshot.authPosX, playerSnapshot.authPosY)));
+                //resync if dysnc by too much due to lag
+                if(mainPlayer.position.dst(new Vector2(playerSnapshot.authPosX, playerSnapshot.authPosY)) >= 2f ) {
+                    mainPlayer.position = new Vector2(playerSnapshot.authPosX, playerSnapshot.authPosY);
+                }
             }
             else if(otherPlayerList.get(playerSnapshot.id) == null){
                 //new player to add to local world
@@ -130,14 +129,12 @@ public class GameManager {
         movePacket.up = mainPlayer.controls.up();
         movePacket.left = mainPlayer.controls.left();
         movePacket.right = mainPlayer.controls.right();
-//        if(!movePacket.left && !movePacket.right && !movePacket.up &&
-//                mainPlayer.grounded && mainPlayer.velocity.x == 0 && mainPlayer.velocity.y == 0){
-//            return; //doing nothing
-//        }
-        movePacket.inputSequenceNumber = inputSequenceNumber++;
+        if(!movePacket.left && !movePacket.right && !movePacket.up &&
+                mainPlayer.grounded && mainPlayer.velocity.x == 0 && mainPlayer.velocity.y == 0){
+            return; //doing nothing
+        }
         client.sendTCP(movePacket);
         platformerPhysics.step(mainPlayer, delta, movePacket.left, movePacket.right, movePacket.up);
-        //pendingInputs.add(movePacket);
     }
 
     public Player getMainPlayer() {
@@ -148,18 +145,17 @@ public class GameManager {
         long now = System.currentTimeMillis();
         long renderTimestamp = now - SERVER_RATE;//interpolate 100m/s in the past
         for(Player player: otherPlayerList.values()){
-            List<LerpState> lerpStates = new ArrayList<>(player.positionBuffer);
-            while(lerpStates.size() >= 2 && lerpStates.get(1).timestamp <= renderTimestamp){
+            while(player.positionBuffer.size() >= 2 && player.positionBuffer.get(1).timestamp <= renderTimestamp){
                 player.positionBuffer.remove(0);
-                lerpStates.remove(0);
+                //lerpStates.remove(0);
             }
-            if(lerpStates.size() >= 2 && lerpStates.get(0).timestamp <= renderTimestamp && renderTimestamp <= lerpStates.get(1).timestamp){
-                float x0 = lerpStates.get(0).playerSnapshot.authPosX;
-                float x1 = lerpStates.get(1).playerSnapshot.authPosX;
-                float y0 = lerpStates.get(0).playerSnapshot.authPosY;
-                float y1 = lerpStates.get(1).playerSnapshot.authPosY;
-                long t0 = lerpStates.get(0).timestamp;
-                long t1 = lerpStates.get(1).timestamp;
+            if(player.positionBuffer.size() >= 2 && player.positionBuffer.get(0).timestamp <= renderTimestamp && renderTimestamp <= player.positionBuffer.get(1).timestamp){
+                float x0 = player.positionBuffer.get(0).playerSnapshot.authPosX;
+                float x1 = player.positionBuffer.get(1).playerSnapshot.authPosX;
+                float y0 = player.positionBuffer.get(0).playerSnapshot.authPosY;
+                float y1 = player.positionBuffer.get(1).playerSnapshot.authPosY;
+                long t0 = player.positionBuffer.get(0).timestamp;
+                long t1 = player.positionBuffer.get(1).timestamp;
                 player.position.x = x0 + (x1 - x0) * (renderTimestamp - t0) / (t1 - t0);
                 player.position.y = y0 + (y1 - y0) * (renderTimestamp - t0) / (t1 - t0);
             }

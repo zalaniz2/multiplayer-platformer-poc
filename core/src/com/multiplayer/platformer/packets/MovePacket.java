@@ -6,5 +6,4 @@ public class MovePacket {
     public boolean up;
     public boolean right;
     public boolean left;
-    public int inputSequenceNumber;
 }

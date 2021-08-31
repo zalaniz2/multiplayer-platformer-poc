@@ -37,6 +37,7 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 	private MapProperties mapProperties;
 	private float delta;
 	private BitmapFont font;
+	private int count = 0;
 
 
 	@Override
