@@ -84,19 +84,14 @@ public class GameManager {
     private void applyWorldState(WorldStatePacket worldStatePacket) {
         for(PlayerSnapshot playerSnapshot: worldStatePacket.players){
             if(mainPlayer.id == playerSnapshot.id){
-                System.out.println("currently on " + inputSequenceNumber);
-                System.out.println("last processed is " + playerSnapshot.lastProcessedInput);
                 mainPlayer.position.x = playerSnapshot.authPosX;
                 mainPlayer.position.y = playerSnapshot.authPosY;
                 while(pendingInputs.size()>0 && pendingInputs.peek().inputSequenceNumber<= playerSnapshot.lastProcessedInput){
-                    System.out.println("Removed " + pendingInputs.peek().inputSequenceNumber);
                     pendingInputs.remove();
                 }
                 for(MovePacket movePacket: pendingInputs){
-                    System.out.println("Reapplying " + movePacket.inputSequenceNumber);
                     platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
                 }
-                System.out.println("Size after: " + pendingInputs.size());
             }
             else if(otherPlayerList.get(playerSnapshot.id) == null){
                 //new player to add to local world
@@ -145,7 +140,7 @@ public class GameManager {
         }
         movePacket.inputSequenceNumber = ++inputSequenceNumber;
         client.sendTCP(movePacket);
-        platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
+        platformerPhysics.step(mainPlayer, delta, movePacket.left, movePacket.right, movePacket.up);
         pendingInputs.add(movePacket);
     }
 
@@ -155,11 +150,10 @@ public class GameManager {
 
     public void interpolateEntities() {
         long now = System.currentTimeMillis();
-        long renderTimestamp = now - SERVER_RATE;//interpolate 100m/s in the past
+        long renderTimestamp = now - SERVER_RATE; //interpolate 100m/s in the past
         for(Player player: otherPlayerList.values()){
             while(player.positionBuffer.size() >= 2 && player.positionBuffer.get(1).timestamp <= renderTimestamp){
                 player.positionBuffer.remove(0);
-                //lerpStates.remove(0);
             }
             if(player.positionBuffer.size() >= 2 && player.positionBuffer.get(0).timestamp <= renderTimestamp && renderTimestamp <= player.positionBuffer.get(1).timestamp){
                 float x0 = player.positionBuffer.get(0).playerSnapshot.authPosX;

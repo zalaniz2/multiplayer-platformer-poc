@@ -13,10 +13,10 @@ public class PlatformerPhysics {
     private TiledMap map;
     private TiledMapTileLayer layer;
 
-    private final float GRAVITY = -55f;
-    private final float JUMP_VELOCITY = 12f;
-    private final float MAX_VELOCITY = 3.3f;
-    private final float DAMPING = 0.87f;
+    private final float GRAVITY = -1f;
+    private final float JUMP_VELOCITY = 700f;
+    private final float MAX_VELOCITY = 3f;
+    private final float DAMPING = 0.9f;
 
     private Pool<Rectangle> rectPool = new Pool<Rectangle>() {
         @Override
@@ -36,7 +36,7 @@ public class PlatformerPhysics {
 
         // check input and apply to velocity & state
         if (up && player.grounded){
-            player.velocity.y += JUMP_VELOCITY;
+            player.velocity.y += JUMP_VELOCITY * delta;
             //player.state = Player.State.Jumping;
             player.grounded = false;
         }
@@ -51,7 +51,7 @@ public class PlatformerPhysics {
             //player.facesRight = true;
         }
 
-        player.velocity.add(0, GRAVITY*delta);
+        player.velocity.add(0, GRAVITY);
 
         player.velocity.x = MathUtils.clamp(player.velocity.x, -MAX_VELOCITY, MAX_VELOCITY);
 
@@ -61,7 +61,6 @@ public class PlatformerPhysics {
         }
 
         player.velocity.scl(delta);
-
 
         Rectangle playerRectangle = rectPool.obtain();
         playerRectangle.set(player.position.x, player.position.y, player.WIDTH, player.HEIGHT);

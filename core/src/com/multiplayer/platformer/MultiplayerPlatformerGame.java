@@ -15,6 +15,7 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.TimeUtils;
 
 public class MultiplayerPlatformerGame extends ApplicationAdapter {
 
@@ -37,7 +38,9 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 	private MapProperties mapProperties;
 	private float delta;
 	private BitmapFont font;
-	private int count = 0;
+	private double accumulator;
+	private double currentTime;
+	private float step = 1f/60f;
 
 
 	@Override
@@ -80,8 +83,18 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 	@Override
 	public void render () {
 		if(!gameManager.isInitialized()) return; //only if player has init data
-		delta = Gdx.graphics.getDeltaTime();
-		gameManager.updatePlayer(delta);
+		//delta = Gdx.graphics.getDeltaTime();
+		double newTime = System.currentTimeMillis()/1000.0;
+		double frameTime = Math.min(newTime - currentTime, 0.25);
+		float deltaTime = (float) frameTime;
+		currentTime = newTime;
+		if(deltaTime > 0.25) deltaTime = 0.25f;
+		accumulator += deltaTime;
+		while(accumulator >= step){
+			System.out.println(step);
+			gameManager.updatePlayer(step);
+			accumulator -= step;
+		}
 		gameManager.interpolateEntities();
 		Gdx.gl.glClear( GL20.GL_COLOR_BUFFER_BIT );
 		cameraPosition.set(gameManager.getMainPlayer().position.x, gameManager.getMainPlayer().position.y, 0f);
