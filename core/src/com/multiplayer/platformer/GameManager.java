@@ -28,6 +28,7 @@ public class GameManager {
 
     private final long SERVER_RATE = 100; //100m/s
     private Player mainPlayer;
+    private Player samplePlayer;
     private Client client;
     private Network network;
     private TiledMap gameMap;
@@ -40,6 +41,7 @@ public class GameManager {
     public GameManager(Texture texture, TiledMap map){
         playerTexture = texture;
         mainPlayer = new Player(playerTexture);
+        samplePlayer = new Player(playerTexture);
         client = new Client();
         network = new Network();
         gameMap = map;
@@ -84,14 +86,15 @@ public class GameManager {
     private void applyWorldState(WorldStatePacket worldStatePacket) {
         for(PlayerSnapshot playerSnapshot: worldStatePacket.players){
             if(mainPlayer.id == playerSnapshot.id){
-                mainPlayer.position.x = playerSnapshot.authPosX;
-                mainPlayer.position.y = playerSnapshot.authPosY;
+                samplePlayer.position.x = playerSnapshot.authPosX;
+                samplePlayer.position.y = playerSnapshot.authPosY;
                 while(pendingInputs.size()>0 && pendingInputs.peek().inputSequenceNumber<= playerSnapshot.lastProcessedInput){
                     pendingInputs.remove();
                 }
                 for(MovePacket movePacket: pendingInputs){
-                    platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
+                    platformerPhysics.step(samplePlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
                 }
+                System.out.println("Difference: " + mainPlayer.position.dst2(samplePlayer.position));
             }
             else if(otherPlayerList.get(playerSnapshot.id) == null){
                 //new player to add to local world

@@ -12,7 +12,7 @@ public class MultiplayerPlatformerServer {
         Gdx.gl20 = Mockito.mock(GL20.class); //mock for loading map
         Gdx.gl = Gdx.gl20;
         HeadlessApplicationConfiguration config = new HeadlessApplicationConfiguration();
-        config.updatesPerSecond = 30;
+        config.updatesPerSecond = 10;
         new HeadlessApplication(new WorldManager(), config);
     }
 }

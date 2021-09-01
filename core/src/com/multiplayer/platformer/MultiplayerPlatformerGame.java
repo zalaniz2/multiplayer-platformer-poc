@@ -38,10 +38,6 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 	private MapProperties mapProperties;
 	private float delta;
 	private BitmapFont font;
-	private static double accumulator;
-	private double currentTime;
-	private static float step = 1f/60f;
-
 
 	@Override
 	public void create () {
@@ -83,17 +79,8 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 	@Override
 	public void render () {
 		if(!gameManager.isInitialized()) return; //only if player has init data
-		//delta = Gdx.graphics.getDeltaTime();
-		double newTime = System.currentTimeMillis()/1000.0;
-		double frameTime = Math.min(newTime - currentTime, 0.25);
-		float deltaTime = (float) frameTime;
-		System.out.println(deltaTime);
-		currentTime = newTime;
-		accumulator += deltaTime;
-		while(accumulator >= step){
-			accumulator -= step;
-			gameManager.updatePlayer(step);
-		}
+		delta = Gdx.graphics.getDeltaTime();
+		gameManager.updatePlayer(delta);
 		gameManager.interpolateEntities();
 		Gdx.gl.glClear( GL20.GL_COLOR_BUFFER_BIT );
 		cameraPosition.set(gameManager.getMainPlayer().position.x, gameManager.getMainPlayer().position.y, 0f);

@@ -13,7 +13,7 @@ public class PlatformerPhysics {
     private TiledMap map;
     private TiledMapTileLayer layer;
 
-    private final float GRAVITY = -1f;
+    private final float GRAVITY = -55f;
     private final float JUMP_VELOCITY = 12f;
     private final float MAX_VELOCITY = 3.3f;
     private final float DAMPING = 0.87f;
@@ -51,7 +51,7 @@ public class PlatformerPhysics {
             //player.facesRight = true;
         }
 
-        player.velocity.add(0, GRAVITY);
+        player.velocity.add(0, GRAVITY*delta);
 
         player.velocity.x = MathUtils.clamp(player.velocity.x, -MAX_VELOCITY, MAX_VELOCITY);
 
