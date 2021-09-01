@@ -38,9 +38,9 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 	private MapProperties mapProperties;
 	private float delta;
 	private BitmapFont font;
-	private double accumulator;
+	private static double accumulator;
 	private double currentTime;
-	private float step = 1f/60f;
+	private static float step = 1f/60f;
 
 
 	@Override
@@ -92,7 +92,7 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 		accumulator += deltaTime;
 		while(accumulator >= step){
 			accumulator -= step;
-			gameManager.updatePlayer(step, (float) (accumulator/step));
+			gameManager.updatePlayer(step);
 		}
 		gameManager.interpolateEntities();
 		Gdx.gl.glClear( GL20.GL_COLOR_BUFFER_BIT );

@@ -92,7 +92,6 @@ public class GameManager {
                 for(MovePacket movePacket: pendingInputs){
                     platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
                 }
-
             }
             else if(otherPlayerList.get(playerSnapshot.id) == null){
                 //new player to add to local world
@@ -128,7 +127,7 @@ public class GameManager {
                 mainPlayer.position.y, mainPlayer.WIDTH, mainPlayer.HEIGHT);
     }
 
-    public void updatePlayer(float delta, float alpha) {
+    public void updatePlayer(float delta) {
         MovePacket movePacket = new MovePacket();
         movePacket.id = mainPlayer.id;
         movePacket.delta = delta;
@@ -141,11 +140,7 @@ public class GameManager {
         }
         movePacket.inputSequenceNumber = ++inputSequenceNumber;
         client.sendTCP(movePacket);
-        float xOld = mainPlayer.position.x;
-        float yOld = mainPlayer.position.y;
         platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
-        mainPlayer.position.x = mainPlayer.position.x * alpha + xOld * (1.0f - alpha);
-        mainPlayer.position.y = mainPlayer.position.y * alpha + yOld * (1.0f - alpha);
         pendingInputs.add(movePacket);
     }
 
