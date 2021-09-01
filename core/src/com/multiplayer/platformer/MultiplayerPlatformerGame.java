@@ -87,13 +87,12 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 		double newTime = System.currentTimeMillis()/1000.0;
 		double frameTime = Math.min(newTime - currentTime, 0.25);
 		float deltaTime = (float) frameTime;
+		System.out.println(deltaTime);
 		currentTime = newTime;
-		if(deltaTime > 0.25) deltaTime = 0.25f;
 		accumulator += deltaTime;
 		while(accumulator >= step){
-			System.out.println(step);
-			gameManager.updatePlayer(step);
 			accumulator -= step;
+			gameManager.updatePlayer(step, (float) (accumulator/step));
 		}
 		gameManager.interpolateEntities();
 		Gdx.gl.glClear( GL20.GL_COLOR_BUFFER_BIT );

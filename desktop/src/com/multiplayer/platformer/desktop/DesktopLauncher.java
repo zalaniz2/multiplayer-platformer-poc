@@ -11,7 +11,7 @@ public class DesktopLauncher {
 		config.width = 800;
 		config.height = 600;
 		config.title = "Platformer";
-		config.foregroundFPS = 60;
+		//config.foregroundFPS = 60;
 		new LwjglApplication(new MultiplayerPlatformerGame(), config);
 	}
 }
