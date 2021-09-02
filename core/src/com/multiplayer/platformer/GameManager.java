@@ -26,9 +26,10 @@ import java.util.concurrent.TimeUnit;
 
 public class GameManager {
 
-    private final long SERVER_RATE = 100; //100m/s
+    private final long SERVER_RATE = 150; //100m/s
     private Player mainPlayer;
     private Player samplePlayer;
+    private Player lerpPlayer;
     private Client client;
     private Network network;
     private TiledMap gameMap;
@@ -37,11 +38,13 @@ public class GameManager {
     private Map<Integer, Player> otherPlayerList = new HashMap<Integer, Player>();
     private Queue<MovePacket> pendingInputs = new LinkedList<>();
     private int inputSequenceNumber = 0;
+    private float fixed_dt = 1f/60f;
 
     public GameManager(Texture texture, TiledMap map){
         playerTexture = texture;
         mainPlayer = new Player(playerTexture);
         samplePlayer = new Player(playerTexture);
+        lerpPlayer = new Player(playerTexture);
         client = new Client();
         network = new Network();
         gameMap = map;
@@ -92,9 +95,13 @@ public class GameManager {
                     pendingInputs.remove();
                 }
                 for(MovePacket movePacket: pendingInputs){
-                    platformerPhysics.step(samplePlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
+                    platformerPhysics.step(samplePlayer, fixed_dt, movePacket.left, movePacket.right, movePacket.up);
                 }
-                System.out.println("Difference: " + mainPlayer.position.dst2(samplePlayer.position));
+                if( Math.abs(mainPlayer.position.x - samplePlayer.position.x) > 2 || Math.abs(mainPlayer.position.y - samplePlayer.position.y) > 2 ) {
+                    System.out.println("Need to reconcile");
+                }
+                System.out.println("Difference X: " + Math.abs(mainPlayer.position.x - samplePlayer.position.x));
+                System.out.println("Difference Y: " + Math.abs(mainPlayer.position.y - samplePlayer.position.y));
             }
             else if(otherPlayerList.get(playerSnapshot.id) == null){
                 //new player to add to local world
@@ -133,7 +140,6 @@ public class GameManager {
     public void updatePlayer(float delta) {
         MovePacket movePacket = new MovePacket();
         movePacket.id = mainPlayer.id;
-        movePacket.delta = delta;
         movePacket.up = mainPlayer.controls.up();
         movePacket.left = mainPlayer.controls.left();
         movePacket.right = mainPlayer.controls.right();
@@ -143,7 +149,7 @@ public class GameManager {
         }
         movePacket.inputSequenceNumber = ++inputSequenceNumber;
         client.sendTCP(movePacket);
-        platformerPhysics.step(mainPlayer, movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
+        platformerPhysics.step(mainPlayer, delta, movePacket.left, movePacket.right, movePacket.up);
         pendingInputs.add(movePacket);
     }
 

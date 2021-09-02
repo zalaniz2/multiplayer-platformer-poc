@@ -38,6 +38,8 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 	private MapProperties mapProperties;
 	private float delta;
 	private BitmapFont font;
+	private float accumulator;
+	private float fixed_dt = 1f/60f;
 
 	@Override
 	public void create () {
@@ -80,7 +82,12 @@ public class MultiplayerPlatformerGame extends ApplicationAdapter {
 	public void render () {
 		if(!gameManager.isInitialized()) return; //only if player has init data
 		delta = Gdx.graphics.getDeltaTime();
-		gameManager.updatePlayer(delta);
+		if(delta > .25f) delta = .25f;
+		accumulator += delta;
+		while(accumulator > fixed_dt){
+			gameManager.updatePlayer(fixed_dt);
+			accumulator -= fixed_dt;
+		}
 		gameManager.interpolateEntities();
 		Gdx.gl.glClear( GL20.GL_COLOR_BUFFER_BIT );
 		cameraPosition.set(gameManager.getMainPlayer().position.x, gameManager.getMainPlayer().position.y, 0f);

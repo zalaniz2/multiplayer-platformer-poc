@@ -34,7 +34,7 @@
         <key>dataFormat</key>
         <string>libgdx</string>
         <key>textureFileName</key>
-        <filename></filename>
+        <filename>sprites.png</filename>
         <key>flipPVR</key>
         <false/>
         <key>pvrCompressionQuality</key>
@@ -132,7 +132,7 @@
             <key>data</key>
             <struct type="DataFile">
                 <key>name</key>
-                <filename></filename>
+                <filename>sprites.txt</filename>
             </struct>
         </map>
         <key>multiPack</key>
@@ -181,8 +181,8 @@
         </struct>
         <key>individualSpriteSettings</key>
         <map type="IndividualSpriteSettingsMap">
-            <key type="filename">sprites/idle_0.png</key>
-            <key type="filename">sprites/jumping_0.png</key>
+            <key type="filename">sprites/idle.png</key>
+            <key type="filename">sprites/jumping.png</key>
             <key type="filename">sprites/walking_0.png</key>
             <key type="filename">sprites/walking_1.png</key>
             <key type="filename">sprites/walking_2.png</key>

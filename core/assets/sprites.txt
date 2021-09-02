@@ -9,14 +9,14 @@ idle
   size: 25, 31
   orig: 25, 31
   offset: 0, 0
-  index: 0
+  index: -1
 jumping
   rotate: false
   xy: 25, 0
   size: 25, 30
   orig: 25, 30
   offset: 0, 0
-  index: 0
+  index: -1
 walking
   rotate: false
   xy: 50, 0

@@ -25,6 +25,7 @@ public class WorldManager extends Game {
     private PlatformerPhysics platformerPhysics;
     private TiledMap map;
     private WorldStatePacket worldStatePacket = new WorldStatePacket();
+    private float fixed_dt = 1f/60f;
 
     @Override
     public void create() {
@@ -86,7 +87,7 @@ public class WorldManager extends Game {
 
     public void applyInput(MovePacket movePacket){
         playerList.get(movePacket.id).inputSequenceNumber = movePacket.inputSequenceNumber;
-        platformerPhysics.step(playerList.get(movePacket.id), movePacket.delta, movePacket.left, movePacket.right, movePacket.up);
+        platformerPhysics.step(playerList.get(movePacket.id), fixed_dt, movePacket.left, movePacket.right, movePacket.up);
     }
     public static WorldManager getGame () {
         return worldManager;
